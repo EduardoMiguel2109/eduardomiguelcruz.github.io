@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Sofia da Silva Freitas</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <style>
+        body {
+            font-family: Monospace;
+            background-color: #f0f0f0;
+            margin: 0px;
+            overflow: hidden;
+        }
+        
+        .pdfobject-container {
+            height: 80%;
+            width: 80%;
+            position: absolute;
+            margin: auto;
+            top: 10%;
+            left: 10%;
+        }
+        
+        .pdfobject {
+            border: 1px solid #000;
+        }
+        
+        #CV {
+            display: none;
+        }
+        
+        #closeCV {
+            z-index: 2147483645 !important;
+            width: 30px !important;
+            height: 30px !important;
+            position: absolute;
+            top: -10px;
+            left: -10px;
+        }
+    </style>
+</head>
+
+<body>
+    <script src="../build/three.min.js"></script>
+    <script src="js/Detector.js"></script>
+    <script src="js/renderers/CanvasRenderer.js"></script>
+    <script src="js/renderers/Projector.js"></script>
+    <script src="js/controls/OrbitControls.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://pdfobject.com/js/pdfobject.min.js"></script>
+    <div id="CV"></div>
+    <div id="boxPills"></div>
+    <script>
+        //PDF
+        var options = {
+            pdfOpenParams: {
+                toolbar: '0'
+            }
+        };
+        PDFObject.embed("pdf/CV.pdf", "#CV", options);
+        $(document).keydown(function(e) {
+            if (e.keyCode == 27) {
+                $('#CV').hide();
+            }
+        });
+        $('#CV').prepend('<img src="textures/close.png" id="closeCV" />');
+        $('#closeCV').click(function(e) {
+            $('#CV').hide();
+        });
+        ////////////////////////////////////////////////7
+        var scene = new THREE.Scene();
+
+        //Camera
+        camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.z = 200;
+
+        //CUBE
+        var loader = new THREE.TextureLoader();
+        var cubeGeometry = new THREE.BoxGeometry(200, 100, 50, 20, 10, 5);
+        var cubeTexture = [
+            new THREE.MeshBasicMaterial({
+                map: loader.load('textures/SideRight.png'),
+                overdraw: 0.3
+            }),
+            new THREE.MeshBasicMaterial({
+                map: loader.load('textures/SideLeft.png'),
+                overdraw: 0.3
+            }),
+            new THREE.MeshBasicMaterial({
+                map: loader.load('textures/SideTop.png'),
+                overdraw: 0.3
+            }),
+            new THREE.MeshBasicMaterial({
+                map: loader.load('textures/SideBottom.png'),
+                overdraw: 0.3
+            }),
+            new THREE.MeshBasicMaterial({
+                map: loader.load('textures/Front.png'),
+                overdraw: 0.3
+            }),
+            new THREE.MeshBasicMaterial({
+                map: loader.load('textures/Back.png'),
+                overdraw: 0.3
+            })
+        ];
+        var cube = new THREE.Mesh(cubeGeometry, cubeTexture);
+        cube.rotation.x = Math.PI / 6;
+        cube.rotation.y = Math.PI / 6;
+        cube.castShadow = true;
+        scene.add(cube);
+
+        //LINES
+        var eGeometry = new THREE.EdgesGeometry(cube.geometry);
+        var eMaterial = new THREE.LineBasicMaterial({
+            color: 0x000,
+            linewidth: 1,
+            overdraw: 2
+        });
+        var edges = new THREE.LineSegments(eGeometry, eMaterial);
+        cube.add(edges);
+
+        //light
+        // var light = new THREE.PointLight(0xff0000, 1, 100, 2);
+        // light.position.set(0, 0, -200);
+        // scene.add(light);
+
+        //RENDER
+        renderer = new THREE.CanvasRenderer();
+        renderer.setPixelRatio(window.devicePixelRatio);
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0xF1F1F1, 1);
+        var boxPills = document.getElementById('boxPills');
+
+        boxPills.appendChild(renderer.domElement);
+
+        //PLANE
+
+
+
+        //event
+        boxPills.addEventListener('resize', onWindowResize, false);
+        boxPills.addEventListener('mousedown', onMouseDown, false);
+        boxPills.addEventListener('mouseup', onMouseUp, false);
+        boxPills.addEventListener('mousemove', onMouseMove, false);
+        boxPills.addEventListener('dblclick', onClick, false);
+
+
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        }
+
+
+        //ROTATE
+        var isDragging = false;
+        var previousMousePosition = {
+            x: 0,
+            y: 0
+        };
+
+        function onMouseDown() {
+            isDragging = true;
+        }
+
+        function onMouseUp() {
+            isDragging = false;
+        }
+
+        function onMouseMove(e) {
+            var deltaMove = {
+                x: e.offsetX - previousMousePosition.x,
+                y: e.offsetY - previousMousePosition.y
+            };
+            if (isDragging) {
+                var deltaRotationQuaternion = new THREE.Quaternion()
+                    .setFromEuler(new THREE.Euler(
+                        toRadians(deltaMove.y * 1),
+                        toRadians(deltaMove.x * 1),
+                        0,
+                        'XYZ'
+                    ));
+                cube.quaternion.multiplyQuaternions(deltaRotationQuaternion, cube.quaternion);
+            }
+
+            previousMousePosition = {
+                x: e.offsetX,
+                y: e.offsetY
+            };
+        }
+
+
+        //CLICK
+        function onClick(event) {
+            openBox(index);
+
+            var mx = (event.clientX / window.innerWidth) * 2 - 1;
+            var my = -(event.clientY / window.innerHeight) * 2 + 1;
+
+            var vector = new THREE.Vector3(mx, my, -1 / Math.tan(30 * Math.PI / 180));
+
+            vector.unproject(camera);
+            var raycaster = new THREE.Raycaster(camera.position,
+                vector.sub(camera.position).normalize()
+            );
+
+            var intersects = raycaster.intersectObject(cube);
+            if (intersects.length > 0) {
+                console.log(cube);
+                var index = Math.floor(intersects[0].faceIndex / 2);
+                //alert(index);
+                switch (index) {
+                    case 0:
+                    case 1:
+                        openBox(index);
+                }
+            }
+        }
+
+        function openBox(index) {
+            // cube.material[index] = new THREE.MeshLambertMaterial({
+            //     transparent: true,
+            //     overdraw: true
+            // });
+            // var sideGeometry = new THREE.PlaneGeometry(0.05, 1, 1);
+            // var sideMaterial = new THREE.MeshBasicMaterial({
+            //     color: 0xffff00,
+            //     side: THREE.DoubleSide
+            // });
+            // var side = new THREE.Mesh(sideGeometry, sideMaterial);
+            // scene.add(side);
+            $('#CV').show();
+        }
+
+
+        function toRadians(angle) {
+            return angle * (Math.PI / 180);
+        }
+
+        function toDegrees(angle) {
+            return angle * (180 / Math.PI);
+        }
+
+        function render() {
+            requestAnimationFrame(render);
+            renderer.render(scene, camera);
+        }
+        render();
+    </script>
+
+</body>
+
+</html>
