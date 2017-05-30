@@ -234,7 +234,11 @@
             // });
             // var side = new THREE.Mesh(sideGeometry, sideMaterial);
             // scene.add(side);
-            $('#CV').show();
+            if(PDFObject.supportsPDFs){
+                $('#CV').show();
+            }else{
+                window.open('pdf/CV.pdf');
+            }
         }
 
 
