@@ -166,10 +166,12 @@
 
         function onMouseDown() {
             isDragging = true;
+            console.log('onDown');
         }
 
         function onMouseUp() {
             isDragging = false;
+            console.log('onUp');
         }
 
         function onMouseMove(e) {
@@ -192,6 +194,8 @@
                 x: e.offsetX,
                 y: e.offsetY
             };
+            console.log('onMove');
+            console.log(deltaMove);
         }
 
 
