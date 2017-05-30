@@ -55,7 +55,8 @@
         //PDF
         var options = {
             pdfOpenParams: {
-                toolbar: '0'
+                toolbar: '0',
+                forcePDFJS: true
             }
         };
         PDFObject.embed("pdf/CV.pdf", "#CV", options);
